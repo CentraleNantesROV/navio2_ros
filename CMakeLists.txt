@@ -74,7 +74,6 @@ ament_target_dependencies(adc_node rclcpp)
 add_library(led_node src/LED.cpp)
 target_link_libraries(led_node ${navio2})
 ament_target_dependencies(led_node rclcpp)
-rosidl_target_interfaces(led_node ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 # link with generated messages
 if(${LEGACY_IDL})
