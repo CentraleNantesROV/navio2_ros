@@ -13,7 +13,6 @@
 #include <Navio2/LSM9DS1.h>
 #include <Common/Util.h>
 #include <stdexcept>
-#include <std_msgs/Bool.h>
 
 const float G_SI = 9.80665f;
 const float DT = 1/1300.0f;

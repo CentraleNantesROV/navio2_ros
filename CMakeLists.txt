@@ -61,19 +61,19 @@ ament_target_dependencies(pwm_example rclcpp class_loader)
 
 add_library(imu_node src/AHRS.cpp)
 target_link_libraries(imu_node ${navio2})
-ament_target_dependencies(imu_node rclcpp sensor_msgs)
+ament_target_dependencies(imu_node rclcpp sensor_msgs rclcpp_components)
 
 add_library(barometer_node src/Barometer.cpp)
 target_link_libraries(barometer_node ${navio2})
-ament_target_dependencies(barometer_node rclcpp sensor_msgs)
+ament_target_dependencies(barometer_node rclcpp sensor_msgs rclcpp_components)
 
 add_library(adc_node src/ADC.cpp)
 target_link_libraries(adc_node ${navio2})
-ament_target_dependencies(adc_node rclcpp)
+ament_target_dependencies(adc_node rclcpp rclcpp_components)
 
 add_library(led_node src/LED.cpp)
 target_link_libraries(led_node ${navio2})
-ament_target_dependencies(led_node rclcpp)
+ament_target_dependencies(led_node rclcpp rclcpp_components)
 
 # link with generated messages
 if(${LEGACY_IDL})
@@ -110,22 +110,23 @@ rclcpp_components_register_node(barometer_node
   PLUGIN "navio2_ros::Barometer"
   EXECUTABLE barometer)
   
-install(DIRECTORY include/ DESTINATION include/)
+if(${LEGACY_IDL})
+    install(DIRECTORY include/ DESTINATION include/)
+else()
+install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
+endif()
 
-install(TARGETS imu_node adc_node led_node barometer_node pwm_example 
+install(TARGETS imu_node adc_node led_node barometer_node pwm_example pwm_node
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME})
-
-install(TARGETS pwm_node
-  EXPORT pwm_node
-  LIBRARY DESTINATION lib)
 
 if(WITH_NAVIO)
     ament_export_libraries(navio2 pwm_node)
 else()
     ament_export_libraries(pwm_node)
 endif()
-ament_export_targets(pwm_node HAS_LIBRARY_TARGET)
+
+ament_export_libraries(pwm_node)
 ament_export_include_directories(include)
 ament_package()
