@@ -18,10 +18,7 @@ PWM_Base::PWM_Base(rclcpp::NodeOptions options, Pins pins) : rclcpp::Node("pwm",
   }
 
   // Navio2 lib uses unsigned int, but node params does not have this value
-  std::vector<int64_t> pins_param;
-  for(auto pin: pins)
-    pins_param.push_back(pin);
-
+  std::vector<int64_t> pins_param{pins.begin(), pins.end()};
   pins_param = declare_parameter("pins", pins_param);
 
   // check value when parsing param, put back to this->pins
@@ -29,9 +26,9 @@ PWM_Base::PWM_Base(rclcpp::NodeOptions options, Pins pins) : rclcpp::Node("pwm",
   for(auto pin: pins_param)
   {
     if(pin > max_pin || pin < 0)
-      RCLCPP_WARN(get_logger(), "PWM does not have pin #%i, skipping", pin);
+      RCLCPP_WARN(get_logger(), "PWM does not have pin #%li, skipping", pin);
     else if(std::find(this->pins.begin(), this->pins.end(), pin) != this->pins.end())
-      RCLCPP_WARN(get_logger(), "Pin #%i appears several times in the parameters, skipping", pin);
+      RCLCPP_WARN(get_logger(), "Pin #%li appears several times in the parameters, skipping", pin);
     else
       this->pins.push_back(pin);
   }

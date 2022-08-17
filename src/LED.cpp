@@ -11,7 +11,7 @@ namespace navio2_ros
 class LED : public rclcpp::Node
 {
 public:
-  LED(rclcpp::NodeOptions options) : rclcpp::Node("led", options)
+  explicit LED(rclcpp::NodeOptions options) : rclcpp::Node("led", options)
   {
     if (check_apm())
     {

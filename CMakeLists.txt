@@ -19,6 +19,15 @@ find_package(rclcpp_components REQUIRED)
 set(CMAKE_CXX_STANDARD 17)
 
 rosidl_generate_interfaces(${PROJECT_NAME} "msg/ADC.msg" "msg/PWM.msg" "msg/LED.msg")
+if("$ENV{ROS_DISTRO}" STREQUAL "galactic" OR "$ENV{ROS_DISTRO}" STREQUAL "foxy")
+    set(LEGACY_IDL TRUE)
+else()
+    set(LEGACY_IDL FALSE)
+endif()
+if(NOT ${LEGACY_IDL})
+    rosidl_get_typesupport_target(cpp_typesupport_target "${PROJECT_NAME}" "rosidl_typesupport_cpp")
+endif()
+
 
 # only use actual navio2 libs on the ROV / RaspberryPi
 string(COMPARE EQUAL "${CMAKE_HOST_SYSTEM_PROCESSOR}" "arm64" WITH_NAVIO)
@@ -49,7 +58,6 @@ ament_target_dependencies(pwm_node rclcpp rclcpp_components)
 add_executable(pwm_example src/pwm_example.cpp)
 target_link_libraries(pwm_example pwm_node ${navio2})
 ament_target_dependencies(pwm_example rclcpp class_loader)
-rosidl_target_interfaces(pwm_example ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 add_library(imu_node src/AHRS.cpp)
 target_link_libraries(imu_node ${navio2})
@@ -62,12 +70,23 @@ ament_target_dependencies(barometer_node rclcpp sensor_msgs)
 add_library(adc_node src/ADC.cpp)
 target_link_libraries(adc_node ${navio2})
 ament_target_dependencies(adc_node rclcpp)
-rosidl_target_interfaces(adc_node ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 add_library(led_node src/LED.cpp)
 target_link_libraries(led_node ${navio2})
 ament_target_dependencies(led_node rclcpp)
 rosidl_target_interfaces(led_node ${PROJECT_NAME} "rosidl_typesupport_cpp")
+
+# link with generated messages
+if(${LEGACY_IDL})
+    rosidl_target_interfaces(pwm_example ${PROJECT_NAME} "rosidl_typesupport_cpp")
+    rosidl_target_interfaces(led_node ${PROJECT_NAME} "rosidl_typesupport_cpp")
+    rosidl_target_interfaces(adc_node ${PROJECT_NAME} "rosidl_typesupport_cpp")
+else()
+    target_link_libraries(pwm_example "${cpp_typesupport_target}")
+    target_link_libraries(led_node "${cpp_typesupport_target}")
+    target_link_libraries(adc_node "${cpp_typesupport_target}")
+endif()
+
     
 if(NOT WIN32)
   ament_environment_hooks(

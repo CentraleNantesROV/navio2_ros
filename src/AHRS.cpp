@@ -28,9 +28,9 @@ using namespace std::chrono_literals;
 class AHRS : public rclcpp::Node
 {
 public:
-  AHRS(rclcpp::NodeOptions options) : rclcpp::Node("imu", options)
+  explicit AHRS(rclcpp::NodeOptions options) : rclcpp::Node("imu", options)
   {
-    const auto name = declare_parameter<std::string>("imu", "imu");
+    const auto name{declare_parameter<std::string>("imu", "imu")};
     msg.header.frame_id = declare_parameter<std::string>("imu_frame", "");
 
     if (check_apm())
@@ -93,10 +93,6 @@ private:
   void update(float dt)
   {
     float recipNorm;
-    float q0q0, q0q1, q0q2, q0q3, q1q1, q1q2, q1q3, q2q2, q2q3, q3q3;
-    float hx, hy, bx, bz;
-    float halfvx, halfvy, halfvz, halfwx, halfwy, halfwz;
-    float halfex, halfey, halfez;
     float qa, qb, qc;
 
     float ax, ay, az;
@@ -131,35 +127,35 @@ private:
       mz *= recipNorm;
 
       // Auxiliary variables to avoid repeated arithmetic
-      q0q0 = w_ * w_;
-      q0q1 = w_ * x_;
-      q0q2 = w_ * y_;
-      q0q3 = w_ * z_;
-      q1q1 = x_ * x_;
-      q1q2 = x_ * y_;
-      q1q3 = x_ * z_;
-      q2q2 = y_ * y_;
-      q2q3 = y_ * z_;
-      q3q3 = z_ * z_;
+      const auto q0q0{w_ * w_};
+      const auto q0q1{w_ * x_};
+      const auto q0q2{w_ * y_};
+      const auto q0q3{w_ * z_};
+      const auto q1q1{x_ * x_};
+      const auto q1q2{x_ * y_};
+      const auto q1q3{x_ * z_};
+      const auto q2q2{y_ * y_};
+      const auto q2q3{y_ * z_};
+      const auto q3q3{z_ * z_};
 
       // Reference direction of Earth's magnetic field
-      hx = 2.0f * (mx * (0.5f - q2q2 - q3q3) + my * (q1q2 - q0q3) + mz * (q1q3 + q0q2));
-      hy = 2.0f * (mx * (q1q2 + q0q3) + my * (0.5f - q1q1 - q3q3) + mz * (q2q3 - q0q1));
-      bx = sqrt(hx * hx + hy * hy);
-      bz = 2.0f * (mx * (q1q3 - q0q2) + my * (q2q3 + q0q1) + mz * (0.5f - q1q1 - q2q2));
+      const auto hx{2.0f * (mx * (0.5f - q2q2 - q3q3) + my * (q1q2 - q0q3) + mz * (q1q3 + q0q2))};
+      const auto hy{2.0f * (mx * (q1q2 + q0q3) + my * (0.5f - q1q1 - q3q3) + mz * (q2q3 - q0q1))};
+      const auto bx{sqrt(hx * hx + hy * hy)};
+      const auto bz{2.0f * (mx * (q1q3 - q0q2) + my * (q2q3 + q0q1) + mz * (0.5f - q1q1 - q2q2))};
 
       // Estimated direction of gravity and magnetic field
-      halfvx = q1q3 - q0q2;
-      halfvy = q0q1 + q2q3;
-      halfvz = q0q0 - 0.5f + q3q3;
-      halfwx = bx * (0.5f - q2q2 - q3q3) + bz * (q1q3 - q0q2);
-      halfwy = bx * (q1q2 - q0q3) + bz * (q0q1 + q2q3);
-      halfwz = bx * (q0q2 + q1q3) + bz * (0.5f - q1q1 - q2q2);
+      const auto halfvx{q1q3 - q0q2};
+      const auto halfvy{q0q1 + q2q3};
+      const auto halfvz{q0q0 - 0.5f + q3q3};
+      const auto halfwx{bx * (0.5f - q2q2 - q3q3) + bz * (q1q3 - q0q2)};
+      const auto halfwy{bx * (q1q2 - q0q3) + bz * (q0q1 + q2q3)};
+      const auto halfwz{bx * (q0q2 + q1q3) + bz * (0.5f - q1q1 - q2q2)};
 
       // Error is sum of cross product between estimated direction and measured direction of field vectors
-      halfex = (ay * halfvz - az * halfvy) + (my * halfwz - mz * halfwy);
-      halfey = (az * halfvx - ax * halfvz) + (mz * halfwx - mx * halfwz);
-      halfez = (ax * halfvy - ay * halfvx) + (mx * halfwy - my * halfwx);
+      const auto halfex{(ay * halfvz - az * halfvy) + (my * halfwz - mz * halfwy)};
+      const auto halfey{(az * halfvx - ax * halfvz) + (mz * halfwx - mx * halfwz)};
+      const auto halfez{(ax * halfvy - ay * halfvx) + (mx * halfwy - my * halfwx)};
 
       // Compute and apply integral feedback if enabled
       if(twoKi > 0.0f) {
@@ -205,9 +201,6 @@ private:
   void updateIMU(float dt)
   {
     float recipNorm;
-    float halfvx, halfvy, halfvz;
-    float halfex, halfey, halfez;
-    float qa, qb, qc;
 
     float ax{}, ay{}, az{};
     float gx{}, gy{}, gz{};
@@ -238,14 +231,14 @@ private:
       az *= recipNorm;
 
       // Estimated direction of gravity and vector perpendicular to magnetic flux
-      halfvx = x_ * z_ - w_ * y_;
-      halfvy = w_ * x_ + y_ * z_;
-      halfvz = w_ * w_ - 0.5f + z_ * z_;
+      const auto halfvx{x_ * z_ - w_ * y_};
+      const auto halfvy{w_ * x_ + y_ * z_};
+      const auto halfvz{w_ * w_ - 0.5f + z_ * z_};
 
       // Error is sum of cross product between estimated and measured direction of gravity
-      halfex = (ay * halfvz - az * halfvy);
-      halfey = (az * halfvx - ax * halfvz);
-      halfez = (ax * halfvy - ay * halfvx);
+      const auto halfex{(ay * halfvz - az * halfvy)};
+      const auto halfey{(az * halfvx - ax * halfvz)};
+      const auto halfez{(ax * halfvy - ay * halfvx)};
 
       // Compute and apply integral feedback if enabled
       if(twoKi > 0.0f) {
@@ -272,9 +265,9 @@ private:
     gx *= (0.5f * dt);		// pre-multiply common factors
     gy *= (0.5f * dt);
     gz *= (0.5f * dt);
-    qa = w_;
-    qb = x_;
-    qc = y_;
+    const auto qa{w_};
+    const auto qb{x_};
+    const auto qc{y_};
     w_ += (-qb * gx - qc * gy - z_ * gz);
     x_ += (qa * gx + qc * gz - z_ * gy);
     y_ += (qa * gy - qb * gz + z_ * gx);

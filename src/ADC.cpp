@@ -15,7 +15,7 @@ using namespace std::chrono_literals;
 class ADCReader : public rclcpp::Node
 {
 public:
-  ADCReader(rclcpp::NodeOptions options) : rclcpp::Node("adc", options)
+  explicit ADCReader(rclcpp::NodeOptions options) : rclcpp::Node("adc", options)
   {
     if (check_apm())
     {
