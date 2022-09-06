@@ -28,14 +28,10 @@ if(NOT ${LEGACY_IDL})
     rosidl_get_typesupport_target(cpp_typesupport_target "${PROJECT_NAME}" "rosidl_typesupport_cpp")
 endif()
 
-
-# only use actual navio2 libs on the ROV / RaspberryPi
-string(COMPARE EQUAL "${CMAKE_HOST_SYSTEM_PROCESSOR}" "arm64" WITH_NAVIO)
-
 include_directories(include)
 
-if(WITH_NAVIO)
-
+# only use actual navio2 libs on the ROV / RaspberryPi
+if("${CMAKE_HOST_SYSTEM_PROCESSOR}" MATCHES "^(arm64|aarch64)$")
     include_directories(Navio2/C++/Navio/Navio2 Navio2/C++/Navio/Common Navio2/C++/Navio)
 
     file(GLOB navio2_SRC
@@ -46,18 +42,20 @@ if(WITH_NAVIO)
     )
     add_library(navio2 ${navio2_SRC})
     set(navio2 "navio2")
+    install(TARGETS navio2 LIBRARY DESTINATION lib)
+    ament_export_libraries(navio2)
 else()
     set(navio2 "")
     include_directories(src/dummy_navio2_include)
 endif()
 
-add_library(pwm_node src/pwm.cpp)
-target_link_libraries(pwm_node ${navio2})
-ament_target_dependencies(pwm_node rclcpp rclcpp_components)
+add_library(pwm src/pwm.cpp)
+target_link_libraries(pwm ${navio2})
+ament_target_dependencies(pwm rclcpp)
 
 add_executable(pwm_example src/pwm_example.cpp)
-target_link_libraries(pwm_example pwm_node ${navio2})
-ament_target_dependencies(pwm_example rclcpp class_loader)
+target_link_libraries(pwm_example pwm ${navio2})
+ament_target_dependencies(pwm_example rclcpp)
 
 add_library(imu_node src/AHRS.cpp)
 target_link_libraries(imu_node ${navio2})
@@ -77,11 +75,11 @@ ament_target_dependencies(led_node rclcpp rclcpp_components)
 
 # link with generated messages
 if(${LEGACY_IDL})
-    rosidl_target_interfaces(pwm_example ${PROJECT_NAME} "rosidl_typesupport_cpp")
+    rosidl_target_interfaces(pwm ${PROJECT_NAME} "rosidl_typesupport_cpp")
     rosidl_target_interfaces(led_node ${PROJECT_NAME} "rosidl_typesupport_cpp")
     rosidl_target_interfaces(adc_node ${PROJECT_NAME} "rosidl_typesupport_cpp")
 else()
-    target_link_libraries(pwm_example "${cpp_typesupport_target}")
+    target_link_libraries(pwm "${cpp_typesupport_target}")
     target_link_libraries(led_node "${cpp_typesupport_target}")
     target_link_libraries(adc_node "${cpp_typesupport_target}")
 endif()
@@ -110,23 +108,16 @@ rclcpp_components_register_node(barometer_node
   PLUGIN "navio2_ros::Barometer"
   EXECUTABLE barometer)
   
-if(${LEGACY_IDL})
-    install(DIRECTORY include/ DESTINATION include/)
-else()
+# legacy include dir + nested since Humble
+install(DIRECTORY include/ DESTINATION include)
 install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
-endif()
 
-install(TARGETS imu_node adc_node led_node barometer_node pwm_example pwm_node
+install(TARGETS imu_node adc_node led_node barometer_node pwm
+  EXPORT pwm
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME})
 
-if(WITH_NAVIO)
-    ament_export_libraries(navio2 pwm_node)
-else()
-    ament_export_libraries(pwm_node)
-endif()
-
-ament_export_libraries(pwm_node)
+ament_export_targets(pwm HAS_LIBRARY_TARGET)
 ament_export_include_directories(include)
 ament_package()
