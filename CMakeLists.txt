@@ -18,7 +18,7 @@ find_package(rclcpp_components REQUIRED)
 
 set(CMAKE_CXX_STANDARD 17)
 
-rosidl_generate_interfaces(${PROJECT_NAME} "msg/ADC.msg" "msg/PWM.msg" "msg/LED.msg")
+rosidl_generate_interfaces(${PROJECT_NAME} "msg/ADC.msg" "msg/PWM.msg" "msg/NavioLED.msg")
 if("$ENV{ROS_DISTRO}" STREQUAL "galactic" OR "$ENV{ROS_DISTRO}" STREQUAL "foxy")
     set(LEGACY_IDL TRUE)
 else()
@@ -32,6 +32,7 @@ include_directories(include)
 
 # only use actual navio2 libs on the ROV / RaspberryPi
 if("${CMAKE_HOST_SYSTEM_PROCESSOR}" MATCHES "^(arm64|aarch64)$")
+#if(TRUE)
     include_directories(Navio2/C++/Navio/Navio2 Navio2/C++/Navio/Common Navio2/C++/Navio)
 
     file(GLOB navio2_SRC
@@ -42,8 +43,9 @@ if("${CMAKE_HOST_SYSTEM_PROCESSOR}" MATCHES "^(arm64|aarch64)$")
     )
     add_library(navio2 ${navio2_SRC})
     set(navio2 "navio2")
-    install(TARGETS navio2 LIBRARY DESTINATION lib)
+    install(TARGETS navio2 EXPORT navio2 LIBRARY DESTINATION lib)
     ament_export_libraries(navio2)
+    ament_export_targets(navio2 HAS_LIBRARY_TARGET)
 else()
     set(navio2 "")
     include_directories(src/dummy_navio2_include)

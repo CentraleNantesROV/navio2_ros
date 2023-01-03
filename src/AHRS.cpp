@@ -49,7 +49,7 @@ public:
     if (!sensor->probe())
       throw(std::runtime_error("Sensor not enabled"));
 
-    sensor->setGyroOffset();
+    setGyroOffset();
 
     // build frame_id as namespace/imu_name if no explicit frame
     if(msg.header.frame_id.size() == 0)

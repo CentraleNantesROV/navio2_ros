@@ -17,7 +17,7 @@ using namespace std::chrono_literals;
 class Barometer : public rclcpp::Node
 {
 public:
-  Barometer(rclcpp::NodeOptions options) : rclcpp::Node("barometer", options)
+  explicit Barometer(rclcpp::NodeOptions options) : rclcpp::Node("barometer", options)
   {
     if (check_apm())
     {
@@ -31,6 +31,9 @@ public:
           = declare_parameter<std::string>("barometer_frame", "baro");
 
     pressure_msg.variance = temperature_msg.variance = 0;
+
+    temperature_pub = create_publisher<Temperature>("temperature", rclcpp::SensorDataQoS());
+    pressure_pub = create_publisher<FluidPressure>("pressure", rclcpp::SensorDataQoS());
 
     publish_timer = create_wall_timer(1s, [&](){publish();});
   }
